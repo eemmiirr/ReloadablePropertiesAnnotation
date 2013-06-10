@@ -75,7 +75,7 @@ public class PropertiesWatcherUnitTest {
 		confirmPropertiesFileModified(this.propertiesFile1);
 
 		propertiesWatcher.stop();
-		wait(_1_SEC);
+		wait(_2_SEC);
 	}
 
 	@Test
@@ -100,7 +100,7 @@ public class PropertiesWatcherUnitTest {
 		confirmPropertiesFileModified(this.propertiesFile2);
 
 		propertiesWatcher.stop();
-		wait(_1_SEC);
+		wait(_2_SEC);
 	}
 
 	private void resetCountDownLatch(final int count) {
@@ -108,8 +108,7 @@ public class PropertiesWatcherUnitTest {
 	}
 
 	private void startPropertiesWatcher(final PropertiesWatcher propertiesWatcher) {
-		Executors.newSingleThreadExecutor()
-			.execute(propertiesWatcher);
+		Executors.newSingleThreadExecutor().execute(propertiesWatcher);
 	}
 
 	private void resetTestData() {
@@ -141,7 +140,7 @@ public class PropertiesWatcherUnitTest {
 				actual = data;
 				lock.countDown();
 			}
-		});
+		}, 500);
 		return propertiesWatcher;
 	}
 }

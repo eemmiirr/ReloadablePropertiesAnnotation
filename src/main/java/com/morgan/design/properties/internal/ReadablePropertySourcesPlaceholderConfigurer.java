@@ -32,6 +32,7 @@ public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySource
 
 	private Properties properties;
 	private Resource[] locations;
+    private long delay = 10000;
 
 	@Autowired
 	public ReadablePropertySourcesPlaceholderConfigurer(final PropertyChangedEventNotifier eventNotifier, final PropertyResolver propertyResolver) {
@@ -75,7 +76,15 @@ public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySource
 		}
 	}
 
-	public Properties getProperties() {
+    public long getDelay() {
+        return delay;
+    }
+
+    public void setDelay(long delay) {
+        this.delay = delay;
+    }
+
+    public Properties getProperties() {
 		return this.properties;
 	}
 
@@ -85,8 +94,7 @@ public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySource
 		}
 		try {
 			// Here we actually create and set a FileWatcher to monitor the given locations
-			Executors.newSingleThreadExecutor()
-				.execute(new PropertiesWatcher(this.locations, this));
+			Executors.newSingleThreadExecutor().execute(new PropertiesWatcher(this.locations, this, delay));
 		}
 		catch (final IOException e) {
 			log.error("Unable to start properties file watcher", e);

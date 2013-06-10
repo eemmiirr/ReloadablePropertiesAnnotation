@@ -11,6 +11,12 @@
 
 	<dependencies>
 
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-vfs2</artifactId>
+            <version>2.0</version>
+        </dependency>
+
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -124,11 +130,18 @@
 					</execution>
 				</executions>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.6</source>
+					<target>1.6</target>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>http://repo1.maven.org/maven2/</url>
+        </repository>
+    </repositories>
 
 </project>

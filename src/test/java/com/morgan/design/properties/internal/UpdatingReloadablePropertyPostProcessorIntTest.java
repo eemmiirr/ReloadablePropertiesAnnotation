@@ -4,12 +4,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.util.Properties;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,10 +42,10 @@ public class UpdatingReloadablePropertyPostProcessorIntTest extends AbstractJUni
 	public void cleanUp() throws Exception {
 		this.loadedProperties.setProperty("dynamicProperty.stringValue", "Injected String Value");
 
-		final OutputStream newOutputStream = Files.newOutputStream(new File(DIR + PROPERTIES).toPath(), new OpenOption[] {});
+		final OutputStream newOutputStream = new FileOutputStream(new File(DIR + PROPERTIES));
 		this.loadedProperties.store(newOutputStream, null);
 
-		Thread.sleep(500); // this is a hack -> I need to find an alternative
+		Thread.sleep(2000); // this is a hack -> I need to find an alternative
 
 		assertThat(this.bean.getStringProperty(), is("Injected String Value"));
 	}
@@ -56,12 +57,12 @@ public class UpdatingReloadablePropertyPostProcessorIntTest extends AbstractJUni
 		this.loadedProperties.setProperty("dynamicProperty.stringValue", "Altered Injected String Value");
 
 		final File file = new File(DIR + PROPERTIES);
-		final OutputStream newOutputStream = Files.newOutputStream(file.toPath(), new OpenOption[] {});
+		final OutputStream newOutputStream = new FileOutputStream(file);
 		this.loadedProperties.store(newOutputStream, null);
 		newOutputStream.flush();
 		newOutputStream.close();
 
-		Thread.sleep(500); // this is a hack -> I need to find an alternative
+		Thread.sleep(2000); // this is a hack -> I need to find an alternative
 
 		assertThat(this.bean.getStringProperty(), is("Altered Injected String Value"));
 	}
