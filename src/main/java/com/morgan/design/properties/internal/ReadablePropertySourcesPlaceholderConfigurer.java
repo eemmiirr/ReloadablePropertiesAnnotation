@@ -1,9 +1,11 @@
 package com.morgan.design.properties.internal;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
+import com.morgan.design.properties.exception.PropertyNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanInitializationException;
@@ -17,15 +19,18 @@ import com.morgan.design.properties.event.PropertyChangedEventNotifier;
 import com.morgan.design.properties.internal.PropertiesWatcher.EventPublisher;
 import com.morgan.design.properties.resolver.PropertyResolver;
 
+import javax.management.*;
+
 /**
  * Specialisation of {@link PropertySourcesPlaceholderConfigurer} that can react to changes in the resources specified. The watching process does not start by
  * default, initiation is triggered by calling <code>ReadablePropertySourcesPlaceholderConfigurer.startWatching()</code>
  * 
  * @author James Morgan
  */
-public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySourcesPlaceholderConfigurer implements EventPublisher {
+public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySourcesPlaceholderConfigurer implements EventPublisher, PropertyAccessorMXBean {
 
 	protected static Logger log = LoggerFactory.getLogger(ReadablePropertySourcesPlaceholderConfigurer.class);
+    private static final String MXBEAN_NAME = PropertyAccessor.class.getPackage().getName() + ":type="  + PropertyAccessor.class.getSimpleName();
 
 	private final PropertyChangedEventNotifier eventNotifier;
 	private final PropertyResolver propertyResolver;
@@ -76,6 +81,53 @@ public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySource
 		}
 	}
 
+    @Override
+    public void setProperty(String property, String value) {
+
+        if(propertyExistsAndNotNull(property, value)) {
+
+            final String oldValue = this.properties.getProperty(property);
+            if (propertyChange(oldValue, value)) {
+
+                // Update locally stored copy of properties
+                this.properties.setProperty(property, value);
+
+                // Post change event to notify any potential listeners
+                this.eventNotifier.post(new PropertyModifiedEvent(property, oldValue, value));
+            }
+        } else {
+            log.warn("Failed setting property. Property {} not found.", property);
+            throw new PropertyNotFoundException(property);
+        }
+    }
+
+    @Override
+    public String getProperty(String property) {
+
+        if(this.properties.containsKey(property)) {
+            return this.properties.getProperty(property);
+        } else {
+            log.warn("Failed getting property. Property {} not found.", property);
+            throw new PropertyNotFoundException(property);
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+
+        // When instance is destroyed un-register the MXBean
+        final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        final ObjectName objectName = new ObjectName(MXBEAN_NAME);
+        mBeanServer.unregisterMBean(objectName);
+    }
+
+    //**********************************************************
+    //**********************************************************
+    // PROPERTIES START
+    //**********************************************************
+    //**********************************************************
+
     public long getDelay() {
         return delay;
     }
@@ -88,6 +140,12 @@ public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySource
 		return this.properties;
 	}
 
+    //**********************************************************
+    //**********************************************************
+    // PROPERTIES END
+    //**********************************************************
+    //**********************************************************
+
 	public void startWatching() {
 		if (null == this.eventNotifier) {
 			throw new BeanInitializationException("Event bus not setup, you should not be calling this method...!");
@@ -95,11 +153,31 @@ public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySource
 		try {
 			// Here we actually create and set a FileWatcher to monitor the given locations
 			Executors.newSingleThreadExecutor().execute(new PropertiesWatcher(this.locations, this, delay));
+
+            // Register this instance as an MBean
+            registerMBean();
 		}
 		catch (final IOException e) {
 			log.error("Unable to start properties file watcher", e);
 		}
 	}
+
+    private void registerMBean() {
+
+        try {
+            final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            final ObjectName objectName = new ObjectName(MXBEAN_NAME);
+            mBeanServer.registerMBean(this, objectName);
+        } catch (MalformedObjectNameException e) {
+            log.error("MBean registration failed.", e);
+        } catch (NotCompliantMBeanException e) {
+            log.error("MBean registration failed.", e);
+        } catch (InstanceAlreadyExistsException e) {
+            log.error("MBean registration failed.", e);
+        } catch (MBeanRegistrationException e) {
+            log.error("MBean registration failed.", e);
+        }
+    }
 
 	public Object resolveProperty(final Object property) {
 		final Object resolvedPropertyValue = this.properties.get(this.propertyResolver.resolveProperty(property));
@@ -116,5 +194,4 @@ public class ReadablePropertySourcesPlaceholderConfigurer extends PropertySource
 	private boolean propertyExistsAndNotNull(final String property, final String newValue) {
 		return this.properties.containsKey(property) && null != newValue;
 	}
-
 }
