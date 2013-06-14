@@ -11,14 +11,17 @@ import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
 import com.morgan.design.properties.testBeans.AutowiredPropertyBean;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @ContextConfiguration(locations = { "classpath:/spring/spring-reloadablePropertyPostProcessorIntTest.xml" })
-public class ReloadablePropertyPostProcessorIntTest extends AbstractJUnit4SpringContextTests {
+@RunWith(SpringJUnit4ClassRunner.class)
+public class ReloadablePropertyPostProcessorIntTest {
 
 	@Autowired
 	private AutowiredPropertyBean bean;

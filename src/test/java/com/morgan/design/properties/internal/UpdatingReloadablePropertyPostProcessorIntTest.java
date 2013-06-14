@@ -14,15 +14,19 @@ import com.google.common.io.Files;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
 import com.morgan.design.properties.testBeans.ReloadingAutowiredPropertyBean;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
 
 @ContextConfiguration(locations = { "classpath:/spring/spring-reloading-reloadablePropertyPostProcessorIntTest.xml" })
-public class UpdatingReloadablePropertyPostProcessorIntTest extends AbstractJUnit4SpringContextTests {
+@RunWith(SpringJUnit4ClassRunner.class)
+public class UpdatingReloadablePropertyPostProcessorIntTest {
 
 	private static final String DIR = "target/test-classes/test-files/";
 	private static final String PROPERTIES = "reloading.properties";
