@@ -1,4 +1,5 @@
 *.class
+*~
 
 # Package Files #
 *.jar
@@ -12,3 +13,6 @@
 .springbeans
 .classpath
 target/*
+
+# IntelliJ #
+*.iml
