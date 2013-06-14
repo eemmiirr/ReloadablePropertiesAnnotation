@@ -19,7 +19,7 @@ These properties also auto reload if the given properties file changes during ru
 </pre>
 
 ### Example Spring XML Configuration ###
-* See [spring-reloadableProperties.xml](https://github.com/jamesemorgan/ReloadablePropertiesAnnotation/blob/master/src/main/resources/spring/spring-reloadableProperties.xml) for example configuration
+* See [spring-reloadableProperties.xml](https://github.com/eemmiirr/ReloadablePropertiesAnnotation/blob/master/src/main/resources/spring/spring-reloadableProperties.xml) for example configuration
 * All main components can be extended or replaced if required
 
 ### How it Works  ###
