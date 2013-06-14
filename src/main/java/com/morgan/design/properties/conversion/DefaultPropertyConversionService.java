@@ -1,20 +1,19 @@
 package com.morgan.design.properties.conversion;
 
-import java.lang.reflect.Field;
-import java.util.Map;
-
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.collect.Maps;
+import com.morgan.design.util.JodaUtils;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.springframework.beans.SimpleTypeConverter;
-import org.springframework.beans.factory.BeanInitializationException;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.collect.Maps;
-import com.morgan.design.util.JodaUtils;
+import java.util.Map;
 
 /**
  * Default implementation of {@link PropertyConversionService}, attempting to convert an object otherwise utilising {@link SimpleTypeConverter} if no matching
@@ -24,6 +23,8 @@ import com.morgan.design.util.JodaUtils;
  */
 @Component
 public class DefaultPropertyConversionService implements PropertyConversionService {
+
+    private static final ExpressionParser expressionParser = new SpelExpressionParser();
 
 	private static Map<Class<? extends Object>, Function<Object, ?>> CONVERTS = Maps.newHashMap();
 	static {
@@ -36,17 +37,20 @@ public class DefaultPropertyConversionService implements PropertyConversionServi
 	private static SimpleTypeConverter DEFAULT = new SimpleTypeConverter();
 
 	@Override
-	public Object convertPropertyForField(final Field field, final Object property) {
-		try {
-			return Functions.forMap(CONVERTS, new DefaultConverter(field.getType()))
-				.apply(field.getType())
-				.apply(property);
-		}
-		catch (final Throwable e) {
-			throw new BeanInitializationException(String.format("Unable to convert property for field [%s].  Value [%s] cannot be converted to [%s]",
-					field.getName(), property, field.getType()), e);
-		}
-	}
+	public Object convertPropertyForField(final Class<?> type, final String property) throws Throwable {
+        return Functions.forMap(CONVERTS, new DefaultConverter(type))
+                .apply(type)
+                .apply(parseSPELIfPresent(property));
+    }
+
+    private Object parseSPELIfPresent(String property) {
+
+        final Object parsedProperty;
+        if (property.startsWith("#{") && property.endsWith("}")) parsedProperty = expressionParser.parseExpression(property.substring(2, property.length() - 2).trim()).getValue();
+        else parsedProperty = property;
+
+        return parsedProperty;
+    }
 
 	private static class DefaultConverter implements Function<Object, Object> {
 		private final Class<?> type;

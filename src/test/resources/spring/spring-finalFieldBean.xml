@@ -16,11 +16,11 @@
 		<constructor-arg ref="conversionService" />
 	</bean>
 
-	<bean
-		class="com.morgan.design.properties.internal.ReadablePropertySourcesPlaceholderConfigurer"
+	<bean class="com.morgan.design.properties.internal.ReadablePropertySourcesPlaceholderConfigurer"
 		autowire="constructor" id="propertyConfigurator">
 		<constructor-arg ref="eventNotifier" />
 		<constructor-arg ref="propertyResolver" />
+        <constructor-arg ref="conversionService" />
 		<property name="ignoreUnresolvablePlaceholders" value="false" />
 		<property name="ignoreResourceNotFound" value="true" />
 		<property name="locations">

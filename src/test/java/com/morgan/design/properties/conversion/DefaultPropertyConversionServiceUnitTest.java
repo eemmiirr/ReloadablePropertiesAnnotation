@@ -20,14 +20,14 @@ public class DefaultPropertyConversionServiceUnitTest {
 	}
 
 	@Test
-	public void shouldConvertPeriodForPropertyForField() throws NoSuchFieldException, SecurityException {
+	public void shouldConvertPeriodForPropertyForField() throws Throwable {
 		assertThat((Period) convertPropertyForField("period", "24:00:00"), is(new Period(24, 0, 0, 0)));
 		assertThat((Period) convertPropertyForField("period", "48:00:00"), is(new Period(48, 0, 0, 0)));
 		assertThat((Period) convertPropertyForField("period", "72:00:00"), is(new Period(72, 0, 0, 0)));
 	}
 
 	@Test
-	public void shouldConvertLocalDateTimeForPropertyForField() throws NoSuchFieldException, SecurityException {
+	public void shouldConvertLocalDateTimeForPropertyForField() throws Throwable {
 		LocalDateTime actual = (LocalDateTime) convertPropertyForField("localDateTime", "2006-05-27 16:03:34.0");
 		assertThat(actual, is(new LocalDateTime(2006, 5, 27, 16, 3, 34)));
 
@@ -36,19 +36,19 @@ public class DefaultPropertyConversionServiceUnitTest {
 	}
 
 	@Test
-	public void shouldConvertLocalDateForPropertyForField() throws NoSuchFieldException, SecurityException {
+	public void shouldConvertLocalDateForPropertyForField() throws Throwable {
 		final LocalDate date = (LocalDate) convertPropertyForField("localDate", "2007-08-02");
 		assertThat(date, is(new LocalDate(2007, 8, 2)));
 	}
 
 	@Test
-	public void shouldConvertLocalTimeForPropertyForField() throws NoSuchFieldException, SecurityException {
+	public void shouldConvertLocalTimeForPropertyForField() throws Throwable {
 		assertThat((LocalTime) convertPropertyForField("localTime", "09:30:51"), is(new LocalTime(9, 30, 51)));
 		assertThat((LocalTime) convertPropertyForField("localTime", "23:18:41"), is(new LocalTime(23, 18, 41)));
 	}
 
 	@Test
-	public void shouldConvertBooleanValue() throws NoSuchFieldException, SecurityException {
+	public void shouldConvertBooleanValue() throws Throwable {
 		assertThat((Boolean) convertPropertyForField("booleanValue", "true"), is(true));
 	}
 
@@ -60,7 +60,7 @@ public class DefaultPropertyConversionServiceUnitTest {
 		boolean booleanValue;
 	}
 
-	private Object convertPropertyForField(final String fieldName, final Object value) throws NoSuchFieldException, SecurityException {
-		return this.conversionService.convertPropertyForField(TestObject.class.getDeclaredField(fieldName), value);
+	private Object convertPropertyForField(final String fieldName, final String value) throws Throwable {
+		return this.conversionService.convertPropertyForField(TestObject.class.getDeclaredField(fieldName).getType(), value);
 	}
 }

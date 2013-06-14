@@ -1,14 +1,12 @@
 package com.morgan.design.properties.internal;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
-
+import com.google.common.collect.Maps;
+import com.google.common.eventbus.Subscribe;
+import com.morgan.design.properties.ReloadableProperty;
+import com.morgan.design.properties.bean.BeanPropertyHolder;
+import com.morgan.design.properties.bean.PropertyModifiedEvent;
+import com.morgan.design.properties.conversion.PropertyConversionService;
+import com.morgan.design.properties.event.PropertyChangedEventNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -18,13 +16,13 @@ import org.springframework.beans.factory.config.InstantiationAwareBeanPostProces
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
-import com.google.common.collect.Maps;
-import com.google.common.eventbus.Subscribe;
-import com.morgan.design.properties.ReloadableProperty;
-import com.morgan.design.properties.bean.BeanPropertyHolder;
-import com.morgan.design.properties.bean.PropertyModifiedEvent;
-import com.morgan.design.properties.conversion.PropertyConversionService;
-import com.morgan.design.properties.event.PropertyChangedEventNotifier;
+import javax.annotation.PostConstruct;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * <p>
@@ -45,7 +43,7 @@ import com.morgan.design.properties.event.PropertyChangedEventNotifier;
 @Component
 public class ReloadablePropertyPostProcessor extends InstantiationAwareBeanPostProcessorAdapter {
 
-	protected static Logger log = LoggerFactory.getLogger(ReloadablePropertyPostProcessor.class);
+	private static final Logger log = LoggerFactory.getLogger(ReloadablePropertyPostProcessor.class);
 
 	private final PropertyChangedEventNotifier eventNotifier;
 	private final PropertyConversionService propertyConversionService;
@@ -92,9 +90,14 @@ public class ReloadablePropertyPostProcessor extends InstantiationAwareBeanPostP
 	 */
 	@Subscribe
 	public void handlePropertyChange(final PropertyModifiedEvent event) {
-		for (final BeanPropertyHolder bean : this.beanPropertySubscriptions.get(event.getPropertyName())) {
-			updateField(bean, event);
-		}
+
+        if(this.beanPropertySubscriptions.containsKey(event.getPropertyName())) {
+            for (final BeanPropertyHolder bean : this.beanPropertySubscriptions.get(event.getPropertyName())) {
+                updateField(bean, event);
+            }
+        } else {
+            log.warn("Property change event not handled. No property mapped with name {}", event.getPropertyName());
+        }
 	}
 
 	public void updateField(final BeanPropertyHolder holder, final PropertyModifiedEvent event) {
@@ -135,7 +138,7 @@ public class ReloadablePropertyPostProcessor extends InstantiationAwareBeanPostP
 					ReflectionUtils.makeAccessible(field);
 					validateFieldNotFinal(bean, field);
 
-					final Object property = getProperties().get(annotation.value());
+					final String property = (String) getProperties().get(annotation.value());
 					validatePropertyAvailableOrDefaultSet(bean, field, annotation, property);
 
 					if (null != property) {
@@ -162,7 +165,7 @@ public class ReloadablePropertyPostProcessor extends InstantiationAwareBeanPostP
 		});
 	}
 
-	private void validatePropertyAvailableOrDefaultSet(final Object bean, final Field field, final ReloadableProperty annotation, final Object property)
+	private void validatePropertyAvailableOrDefaultSet(final Object bean, final Field field, final ReloadableProperty annotation, final String property)
 			throws IllegalArgumentException, IllegalAccessException {
 		if (null == property && fieldDoesNotHaveDefault(field, bean)) {
 			throw new BeanInitializationException(String.format("No property found for field annotated with @ReloadableProperty, "
@@ -199,12 +202,19 @@ public class ReloadablePropertyPostProcessor extends InstantiationAwareBeanPostP
 	// Utility methods for class access //
 	// ///////////////////////////////////
 
-	private Object convertPropertyForField(final Field field, final Object property) {
-		return this.propertyConversionService.convertPropertyForField(field, resolverProperty(property));
+	private Object convertPropertyForField(final Field field, final String property) {
+
+        try {
+		    return this.propertyConversionService.convertPropertyForField(field.getType(), resolverProperty(property));
+        } catch (final Throwable e) {
+            throw new BeanInitializationException(String.format("Unable to convert property for field [%s].  Value [%s] cannot be converted to [%s]",
+                    field.getName(), property, field.getType()), e);
+        }
+
 	}
 
-	private Object resolverProperty(final Object property) {
-		return this.placeholderConfigurer.resolveProperty(property);
+	private String resolverProperty(final String property) {
+		return (String) this.placeholderConfigurer.resolveProperty(property);
 	}
 
 	private Properties getProperties() {

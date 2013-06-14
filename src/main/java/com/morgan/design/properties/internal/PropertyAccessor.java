@@ -16,7 +16,7 @@ public interface PropertyAccessor {
      *
      * @throws com.morgan.design.properties.exception.PropertyNotFoundException If the property is not found
      */
-    void setProperty(String property, String value);
+    void setProperty(String property, String newValue);
 
     /**
      *  Retrieves the property with the given name.
@@ -27,4 +27,15 @@ public interface PropertyAccessor {
      * @throws com.morgan.design.properties.exception.PropertyNotFoundException If the property is not found
      */
     String getProperty(String property);
+
+    /**
+     *  Retrieves the parsed property with the given name.
+     *  If it's a Spring EL expression the return value will differ from the getProperty method
+     *
+     * @param property Name of the property
+     * @return Parsed value of the property
+     *
+     * @throws com.morgan.design.properties.exception.PropertyNotFoundException If the property is not found
+     */
+    String getParsedProperty(String property);
 }

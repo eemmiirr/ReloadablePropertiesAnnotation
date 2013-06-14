@@ -11,6 +11,7 @@
 	<bean class="com.morgan.design.properties.internal.ReadablePropertySourcesPlaceholderConfigurer" autowire="constructor" id="propertyConfigurator">
 		<constructor-arg ref="eventNotifier" />
 		<constructor-arg ref="propertyResolver" />
+        <constructor-arg ref="conversionService" />
         <property name="delay" value="500" />
 		<property name="ignoreUnresolvablePlaceholders" value="false" />
 		<property name="ignoreResourceNotFound" value="false" />
