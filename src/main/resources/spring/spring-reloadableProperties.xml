@@ -21,6 +21,7 @@ http://www.springframework.org/schema/context http://www.springframework.org/sch
 		<property name="ignoreResourceNotFound" value="true" />
 		<constructor-arg ref="eventNotifier" />
 		<constructor-arg ref="propertyResolver" />
+        <constructor-arg ref="conversionService" />
 		<property name="locations">
 			<list>
 				<value>classpath*:META-INF/*.properties</value>
